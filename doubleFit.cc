@@ -12,15 +12,21 @@ using namespace std;
 int ps(TString filename);
 
 int doubleFit(){
+
+	// FOOL file search
+	// set for your own files
 	const string HEADER = "live_data1204_";
-	const string FOOTER = "on.mca";
-	//const string FOOTER = "off.mca";
+	//const string FOOTER = "on.mca";
+	const string FOOTER = "off.mca";
+	
 	int result = 0;
 	stringstream ss;
 
 	for(int i=0;i<100;i++){
+		//stringstream init
 		ss.str("");
 		ss.clear(stringstream::goodbit);
+
 		ss << HEADER << i << FOOTER;
 		cout << ss.str() << endl;
 		if(ps(ss.str())==0) result++;
@@ -62,7 +68,6 @@ int ps(TString filename)
 				puts("stoi failed (Maybe gomiLine(l.12)Error)");
 				return 1;
 			}
-
 			//for calibration
 			x=a*j+b;
 
@@ -89,9 +94,9 @@ int ps(TString filename)
 	hist1->Draw();
 
 	// Peak Search
-	Int_t maxpeaks = 5;
+	Int_t maxpeaks = 6;
 	TSpectrum *spectrum = new TSpectrum(maxpeaks);	
-	spectrum->Search(hist1,1,"new");
+	spectrum->Search(hist1,3,"new");
 	//TH1* back = spectrum->Background(hist1,20,"Compton");
 	//TCanvas* c2 = new TCanvas;
 	//back->Draw("same");
@@ -99,9 +104,52 @@ int ps(TString filename)
 	Double_t *xpeaks = spectrum->GetPositionX();
 	Double_t *ypeaks = spectrum->GetPositionY();
 
-	//for(int i=0;i<sizeof(xpeaks);i++){
-	//	cout << filename << " "  << xpeaks[i] << " " << ypeaks[i] << endl;
-	//}
+	double peakX1333 = 0;
+	double peakX1173 = 0;
+	double peakY1333;
+	double peakY1173;
+	for(int i=0;i<sizeof(xpeaks);i++){
+		//cout << filename << " "  << xpeaks[i] << " " << ypeaks[i] << endl;
+		if(xpeaks[i] > peakX1333){
+			peakX1173 = peakX1333;
+			peakY1173 = peakY1333;
+
+			peakX1333 = xpeaks[i];
+			peakY1333 = ypeaks[i];
+		}
+	}
+	//cout << "Point1333: " << peakX1333 << ":" << peakY1333 << endl;
+	//cout << "Point1173: " << peakX1173 << ":" << peakY1173 << endl;
+	double MaxRangeFit = 1.1 * peakX1333;
+	double MinRangeFit = 0.9 * peakX1173;
+
+	//Insert Fit model here.
+	TF1* doubleGauss = new TF1("doubleGauss"," [0]*exp(-0.5*((x-[1])/[2])**2)+ [3]*exp(-0.5*((x-[1]/1.3325*1.1732)/[4])**2)",MinRangeFit,MaxRangeFit);//name,func,min,max
+
+	doubleGauss->SetParName(0,"const1333");
+	doubleGauss->SetParameter(0,peakY1333);
+
+	doubleGauss->SetParName(1,"Mean1333");
+	doubleGauss->SetParameter(1,peakX1333);
+
+	doubleGauss->SetParName(2,"sigma1333");
+	doubleGauss->SetParameter(2,50.0);
+
+	doubleGauss->SetParName(3,"Const1173");
+	doubleGauss->SetParameter(3,peakY1173);
+
+	doubleGauss->SetParName(4,"sigma1173");
+	doubleGauss->SetParameter(4,50.0);
+
+
+	hist1->Fit("doubleGauss","","",MinRangeFit,MaxRangeFit);
+
+	ofstream ofs;
+	ofs.open("fit.out",ios::out);
+
+	ofs << filename  <<" " <<  "111" << endl;
+	ofs.close();
+
 
 	// Save as pdf
 	filename = filename + ".pdf";
