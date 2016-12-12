@@ -2,7 +2,8 @@
 // doubleFit.cc - root macro
 // to Draw and fit pocket mca data
 //
-// Usage:$root doubleFit.cc
+// Usage:$root -b doubleFit.cc
+//  in directory including mca file 
 //
 // Author: Mizukoshi Keita
 // 2016. Dec, 12 
@@ -124,8 +125,8 @@ int ps(TString filename)
 	double peakY1173;
 	for(int i=0;i<sizeof(xpeaks);i++){
 		if(xpeaks[i] > peakX1333 && xpeaks[i] < 2000.0){
-			peakX1173 = peakX1333;
-			peakY1173 = peakY1333;
+			//peakX1173 = peakX1333;
+			//peakY1173 = peakY1333;
 			peakX1333 = xpeaks[i];
 			peakY1333 = ypeaks[i];
 		}
@@ -140,37 +141,44 @@ int ps(TString filename)
 			peakY1173 = ypeaks[i];
 		}
 	}
-	cout << "Point1333: " << peakX1333 << ":" << peakY1333 << endl;
-	cout << "Point1173: " << peakX1173 << ":" << peakY1173 << endl;
+	//cout << "Point1333: " << peakX1333 << ":" << peakY1333 << endl;
+	//cout << "Point1173: " << peakX1173 << ":" << peakY1173 << endl;
 	double MaxRangeFit = 1.1 * peakX1333;
 	double MinRangeFit = 0.9 * peakX1173;
 
 	//Insert Fit model here.
-	TF1* doubleGauss = new TF1("doubleGauss"," [0]*exp(-0.5*((x-[1])/[2])**2)+ [3]*exp(-0.5*((x-[1]/1.3325*1.1732)/[4])**2)",MinRangeFit,MaxRangeFit);//name,func,min,max
+	//Double gaussian
+	TF1* doubleGauss = new TF1("doubleGauss"," [0]*exp(-0.5*((x-[1])/[2])**2)+ [3]*exp(-0.5*((x-([1]/1.3325*1.1732))/[4])**2)",MinRangeFit,MaxRangeFit);//name,func,min,max
 
+	//Set 5 parameters
 	doubleGauss->SetParName(0,"const1333");
 	doubleGauss->SetParameter(0,peakY1333);
+	doubleGauss->SetParLimits(0,peakY1333*0.9,peakY1333*1.1);
 
 	doubleGauss->SetParName(1,"Mean1333");
 	doubleGauss->SetParameter(1,peakX1333);
+	doubleGauss->SetParLimits(1,peakX1333*0.99,peakX1333*1.01);
 
 	doubleGauss->SetParName(2,"sigma1333");
-	doubleGauss->SetParameter(2,1.0);
+	doubleGauss->SetParameter(2,10.0);
+	doubleGauss->SetParLimits(2,1.0,60.0);
 
 	doubleGauss->SetParName(3,"Const1173");
 	doubleGauss->SetParameter(3,peakY1173);
+	doubleGauss->SetParLimits(3,peakY1173*0.9,peakY1173*1.1);
 
 	doubleGauss->SetParName(4,"sigma1173");
-	doubleGauss->SetParameter(4,1.0);
-
+	doubleGauss->SetParameter(4,10.0);
+	doubleGauss->SetParLimits(4,1.0,60.0);;
 
 	hist1->Fit("doubleGauss","","",MinRangeFit,MaxRangeFit);
 
+
+	// Output Fit parameter and error
 	ofstream ofs;
 	ofs.open("fit.txt",ios::app);
-
-
 	ofs << filename  <<" " << doubleGauss->GetParameter(1)  << " " << doubleGauss->GetParError(1) << endl;
+	ofs << peakX1333 << endl;
 	ofs.close();
 
 	// Save as pdf
