@@ -28,17 +28,15 @@ int doubleFit(){
 		//stringstream init
 		ss.str("");
 		ss.clear(stringstream::goodbit);
-
 		ss << HEADER << i << FOOTER1;
 		cout << ss.str() << endl;
 		if(ps(ss.str())==0) result++;
 	}
-
+			                                             
 	for(int i=0;i<100;i++){
 		//stringstream init
 		ss.str("");
 		ss.clear(stringstream::goodbit);
-
 		ss << HEADER << i << FOOTER2;
 		cout << ss.str() << endl;
 		if(ps(ss.str())==0) result++;
@@ -55,6 +53,9 @@ int ps(TString filename)
 	const int gomiLineHead = 12;
 	const Double_t HIST_MIN = 0.0;
 	const Double_t HIST_MAX = 2048;
+
+	gStyle->SetOptFit();
+	gStyle->SetOptFit(1111);
 
 	ifstream ifs(filename);
 	// for calibration
@@ -122,7 +123,7 @@ int ps(TString filename)
 	double peakY1333;
 	double peakY1173;
 	for(int i=0;i<sizeof(xpeaks);i++){
-		if(xpeaks[i] > peakX1333){
+		if(xpeaks[i] > peakX1333 && xpeaks[i] < 2000.0){
 			peakX1173 = peakX1333;
 			peakY1173 = peakY1333;
 			peakX1333 = xpeaks[i];
@@ -154,22 +155,22 @@ int ps(TString filename)
 	doubleGauss->SetParameter(1,peakX1333);
 
 	doubleGauss->SetParName(2,"sigma1333");
-	doubleGauss->SetParameter(2,10.0);
+	doubleGauss->SetParameter(2,1.0);
 
 	doubleGauss->SetParName(3,"Const1173");
 	doubleGauss->SetParameter(3,peakY1173);
 
 	doubleGauss->SetParName(4,"sigma1173");
-	doubleGauss->SetParameter(4,10.0);
+	doubleGauss->SetParameter(4,1.0);
 
 
 	hist1->Fit("doubleGauss","","",MinRangeFit,MaxRangeFit);
 
 	ofstream ofs;
-	ofs.open("fit.out",ios::out);
+	ofs.open("fit.txt",ios::app);
 
-	//dummy
-	ofs << filename  <<" " <<  "111" << endl;
+
+	ofs << filename  <<" " << doubleGauss->GetParameter(1)  << " " << doubleGauss->GetParError(1) << endl;
 	ofs.close();
 
 	// Save as pdf
