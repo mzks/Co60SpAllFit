@@ -1,8 +1,8 @@
 // -------------------------------- //
-// doubleFit.C - root macro
+// doubleFit.cc - root macro
 // to Draw and fit pocket mca data
 //
-// Usage:
+// Usage:$root doubleFit.cc
 //
 // Author: Mizukoshi Keita
 // 2016. Dec, 12 
@@ -15,9 +15,11 @@ int doubleFit(){
 
 	// FOOL file search
 	// set for your own files
+	// For file like "live_data1204_50on.mca" 
+	// Fix for your data
 	const string HEADER = "live_data1204_";
-	//const string FOOTER = "on.mca";
-	const string FOOTER = "off.mca";
+	const string FOOTER1 = "on.mca";
+	const string FOOTER2 = "off.mca";
 	
 	int result = 0;
 	stringstream ss;
@@ -27,10 +29,21 @@ int doubleFit(){
 		ss.str("");
 		ss.clear(stringstream::goodbit);
 
-		ss << HEADER << i << FOOTER;
+		ss << HEADER << i << FOOTER1;
 		cout << ss.str() << endl;
 		if(ps(ss.str())==0) result++;
 	}
+
+	for(int i=0;i<100;i++){
+		//stringstream init
+		ss.str("");
+		ss.clear(stringstream::goodbit);
+
+		ss << HEADER << i << FOOTER2;
+		cout << ss.str() << endl;
+		if(ps(ss.str())==0) result++;
+	}
+
 	cout << "RESULT:" << result << endl;
 	return 0;
 
@@ -109,17 +122,25 @@ int ps(TString filename)
 	double peakY1333;
 	double peakY1173;
 	for(int i=0;i<sizeof(xpeaks);i++){
-		//cout << filename << " "  << xpeaks[i] << " " << ypeaks[i] << endl;
 		if(xpeaks[i] > peakX1333){
 			peakX1173 = peakX1333;
 			peakY1173 = peakY1333;
-
 			peakX1333 = xpeaks[i];
 			peakY1333 = ypeaks[i];
 		}
 	}
-	//cout << "Point1333: " << peakX1333 << ":" << peakY1333 << endl;
-	//cout << "Point1173: " << peakX1173 << ":" << peakY1173 << endl;
+	double disX;
+	double disP;
+	for(int i=0;i<sizeof(xpeaks);i++){
+		disX =(peakX1333 *1173/1333 - xpeaks[i])*(peakX1333 *1173/1333 - xpeaks[i]);
+		disP =(peakX1333 *1173/1333 - peakX1173)*(peakX1333 *1173/1333 - peakX1173);
+		if( disX < disP  ){
+			peakX1173 = xpeaks[i];
+			peakY1173 = ypeaks[i];
+		}
+	}
+	cout << "Point1333: " << peakX1333 << ":" << peakY1333 << endl;
+	cout << "Point1173: " << peakX1173 << ":" << peakY1173 << endl;
 	double MaxRangeFit = 1.1 * peakX1333;
 	double MinRangeFit = 0.9 * peakX1173;
 
@@ -133,13 +154,13 @@ int ps(TString filename)
 	doubleGauss->SetParameter(1,peakX1333);
 
 	doubleGauss->SetParName(2,"sigma1333");
-	doubleGauss->SetParameter(2,50.0);
+	doubleGauss->SetParameter(2,10.0);
 
 	doubleGauss->SetParName(3,"Const1173");
 	doubleGauss->SetParameter(3,peakY1173);
 
 	doubleGauss->SetParName(4,"sigma1173");
-	doubleGauss->SetParameter(4,50.0);
+	doubleGauss->SetParameter(4,10.0);
 
 
 	hist1->Fit("doubleGauss","","",MinRangeFit,MaxRangeFit);
@@ -147,9 +168,9 @@ int ps(TString filename)
 	ofstream ofs;
 	ofs.open("fit.out",ios::out);
 
+	//dummy
 	ofs << filename  <<" " <<  "111" << endl;
 	ofs.close();
-
 
 	// Save as pdf
 	filename = filename + ".pdf";
