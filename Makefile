@@ -20,4 +20,7 @@ $(TARGET): $(OBJS)
 clean:
 	rm -rf $(TARGET)
 	rm -rf $(OBJS)
-	rm -rf *.root
+
+reset:
+	rm -rf *.pdf
+	rm -rf fit.txt
