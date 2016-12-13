@@ -2,7 +2,7 @@
 // doubleFit.cc - root macro
 // to Draw and fit pocket mca data
 //
-// Usage:$root -b doubleFit.cc
+// Usage:$root -bq doubleFit.cc
 //  in directory including mca file 
 //
 // Author: Mizukoshi Keita
@@ -156,15 +156,15 @@ int ps(TString filename)
 	m1173->Draw();
 
 	//Set peak range
-	double MaxRangeFit = 1.1 * peakX1333;
-	double MinRangeFit = 0.9 * peakX1173;
+	double MaxRangeFit = 1.05 * peakX1333;
+	double MinRangeFit = 0.95 * peakX1173;
 
 	//define Double gaussian
 	//define 1173 mean as 1333 mean *1173 / 1333
 	TF1* doubleGauss = new TF1("doubleGauss"," [0]*exp(-0.5*((x-[1])/[2])**2)+ [3]*exp(-0.5*((x-([1]/1.3325*1.1732))/[4])**2)",MinRangeFit,MaxRangeFit);//name,func,min,max
 
 	//Set 5 parameters
-	doubleGauss->SetParName(0,"const1333");
+	doubleGauss->SetParName(0,"Const1333");
 	doubleGauss->SetParameter(0,peakY1333);
 	doubleGauss->SetParLimits(0,peakY1333*0.9,peakY1333*1.1);
 
@@ -172,7 +172,7 @@ int ps(TString filename)
 	doubleGauss->SetParameter(1,peakX1333);
 	doubleGauss->SetParLimits(1,peakX1333*0.99,peakX1333*1.01); // too strict?
 
-	doubleGauss->SetParName(2,"sigma1333");
+	doubleGauss->SetParName(2,"Sigma1333");
 	doubleGauss->SetParameter(2,10.0);
 	doubleGauss->SetParLimits(2,1.0,60.0);
 
@@ -180,7 +180,7 @@ int ps(TString filename)
 	doubleGauss->SetParameter(3,peakY1173);
 	doubleGauss->SetParLimits(3,peakY1173*0.9,peakY1173*1.1);
 
-	doubleGauss->SetParName(4,"sigma1173");
+	doubleGauss->SetParName(4,"Sigma1173");
 	doubleGauss->SetParameter(4,10.0);
 	doubleGauss->SetParLimits(4,1.0,60.0);;
 
@@ -191,12 +191,17 @@ int ps(TString filename)
 	ofstream ofs;
 	ofs.open("fit.txt",ios::app); // option add
 	ofs << filename  <<" " << doubleGauss->GetParameter(1)  << " " << doubleGauss->GetParError(1) << endl;
-	ofs << peakX1333 << endl;
+	//ofs << peakX1333 << endl;
 	ofs.close();
 
 	// Save as pdf
 	filename = filename + ".pdf";
 	c1->SaveAs(filename);
+	delete spectrum;
+	delete m1333;
+	delete m1173;
+	delete doubleGauss;
 	delete hist1;
+	delete c1;
 	return 0;
 }
