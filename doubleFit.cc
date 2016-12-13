@@ -1,18 +1,31 @@
 // -------------------------------- //
-// doubleFit.cc - root macro
+// doubleFit.cc - C++ source
 // to Draw and fit pocket mca data
 //
-// Usage:$root -bq doubleFit.cc
+// Usage:$make
+// 		$./doubleFit
 //  in directory including mca file 
 //
 // Author: Mizukoshi Keita
 // 2016. Dec, 12 
 // -------------------------------- //
+#include <iostream>
+#include <fstream>
+#include "TH1D.h"
+#include "TCanvas.h"
+#include "TMarker.h"
+#include "TF1.h"
+#include "TROOT.h"
+#include "TStyle.h"
+#include "TString.h"
+#include "TSpectrum.h"
+#include <string>
+#include <sstream>
 
 using namespace std;
 int ps(TString filename);
 
-int doubleFit(){
+int main(){
 
 	// stupid file search without other libraries
 	// set for your own files
