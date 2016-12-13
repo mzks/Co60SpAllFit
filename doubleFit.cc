@@ -112,7 +112,7 @@ int ps(TString filename)
 	hist1->Draw();
 
 	// Peak Search
-	Int_t maxpeaks = 6;
+	Int_t maxpeaks = 6; // Number of peak search
 	TSpectrum *spectrum = new TSpectrum(maxpeaks);	
 	spectrum->Search(hist1,3,"new");
 	//TH1* back = spectrum->Background(hist1,20,"Compton");
@@ -128,6 +128,8 @@ int ps(TString filename)
 	double peakX1173 = 0;
 	double peakY1333;
 	double peakY1173;
+
+	// regard Maximum X peak as 1333 MeV
 	for(int i=0;i<sizeof(xpeaks);i++){
 		if(xpeaks[i] > peakX1333 && xpeaks[i] < 2000.0){ // exclude much huge X (Ex.3e+200)
 			//peakX1173 = peakX1333;
@@ -156,6 +158,7 @@ int ps(TString filename)
 	m1173->Draw();
 
 	//Set peak range
+	//This 5% range is very important.(experimental)
 	double MaxRangeFit = 1.05 * peakX1333;
 	double MinRangeFit = 0.95 * peakX1173;
 
